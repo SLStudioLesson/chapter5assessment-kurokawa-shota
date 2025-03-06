@@ -3,6 +3,12 @@ package com.taskapp.logic;
 import com.taskapp.dataaccess.LogDataAccess;
 import com.taskapp.dataaccess.TaskDataAccess;
 import com.taskapp.dataaccess.UserDataAccess;
+import com.taskapp.exception.AppException;
+import java.util.Date;
+
+import java.util.List;
+import com.taskapp.model.Task;
+import com.taskapp.model.User;
 
 public class TaskLogic {
     private final TaskDataAccess taskDataAccess;
@@ -34,8 +40,26 @@ public class TaskLogic {
      * @see com.taskapp.dataaccess.TaskDataAccess#findAll()
      * @param loginUser ログインユーザー
      */
-    // public void showAll(User loginUser) {
-    // }
+    public void showAll(User loginUser) {
+        // findAllで一覧取得
+        List<Task> tasks = taskDataAccess.findAll();
+        tasks.forEach(task -> {
+            String status = "未着手";
+            if (task.getStatus() == 1) {
+                status = "着手中";
+            } else if (task.getStatus() == 2) {
+                status = "完了";
+            }
+            // 担当者
+            String repUser = "";
+            if (loginUser.getCode() == task.getRepUser().getCode()) {
+                repUser = "あなたが担当しています";
+            } else {
+                repUser = task.getRepUser().getName() + "が担当しています";
+            }
+            System.out.println("タスク名：" + task.getName() + ", 担当者名：" + repUser + ", ステータス：" + status);
+        });
+    }
 
     /**
      * 新しいタスクを保存します。
@@ -49,9 +73,14 @@ public class TaskLogic {
      * @param loginUser ログインユーザー
      * @throws AppException ユーザーコードが存在しない場合にスローされます
      */
-    // public void save(int code, String name, int repUserCode,
-    //                 User loginUser) throws AppException {
-    // }
+    public void save(int code, String name, int repUserCode,User loginUser) throws AppException {
+        // tasks.csv にタスクを保存
+        Task task = new Task(code, name, repUserCode, loginUser);
+        taskDataAccess.save(task);
+
+    // 追加: ログの保存
+    //logDataAccess.save(code, name, repUserCode, loginUser.getCode(), new Date());
+    //}
 
     /**
      * タスクのステータスを変更します。
@@ -79,4 +108,5 @@ public class TaskLogic {
      */
     // public void delete(int code) throws AppException {
     // }
+}
 }
