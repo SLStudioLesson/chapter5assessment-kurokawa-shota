@@ -5,14 +5,9 @@ import java.io.IOException;
 import com.taskapp.exception.AppException;
 
 import java.io.InputStreamReader;
-import java.time.LocalDate;
-
-import javax.print.DocFlavor.READER;
 
 import com.taskapp.logic.TaskLogic;
 import com.taskapp.logic.UserLogic;
-import com.taskapp.model.Log;
-import com.taskapp.model.Task;
 import com.taskapp.model.User;
 
 public class TaskUI {
@@ -71,7 +66,6 @@ public class TaskUI {
                     case "1":
                         // タスク一覧表示
                         taskLogic.showAll(loginUser);
-                        System.out.println();
                         // サブメニュー
                         selectSubMenu();
                         break;
@@ -184,35 +178,35 @@ public class TaskUI {
      * @see #inputDeleteInformation()
      */
     public void selectSubMenu() {
-        // メインメニュー
         boolean flg = true;
-        while (flg) {
-            try {
-                System.out.println("以下1~2のメニューから好きな選択肢を選んでください。");
-                System.out.println("1. タスクのステータス変更, 2. メインメニューに戻る");
-                System.out.print("選択肢：");
-                String selectMenu = reader.readLine();
-
-                System.out.println();
-
-                switch (selectMenu) {
-                    case "1":
-                        // ステータス更新機能
-                        // inputChangeInformation();
-                        break;
-                    case "2":
-                        System.out.println("ログアウトしました。");
-                        flg = false;
-                        break;
-                    default:
-                        System.out.println("選択肢が誤っています。1~3の中から選択してください。");
-                        break;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+    while (flg) {
+        try {
+            // サブメニュー表示
+            System.out.println("以下1~2のメニューから好きな選択肢を選んでください。");
+            System.out.println("1. タスクのステータス変更, 2. メインメニューに戻る");
+            System.out.print("選択肢：");
+            String selectMenu = reader.readLine();
+            
+            // メニュー選択に応じた処理
+            switch (selectMenu) {
+                case "1":
+                    // ステータス変更メニューに移動
+                    inputChangeInformation();
+                    flg = false;  // 処理が完了したらループを終了
+                    break;
+                case "2":
+                    break;
+                default:
+                    // 無効な選択肢が入力された場合、再度入力を求める
+                    System.out.println("選択肢が誤っています。1または2を選択してください。");
+                    break;
             }
             System.out.println();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+        
     }
 
     /**
@@ -221,7 +215,7 @@ public class TaskUI {
      * @see #isNumeric(String)
      * @see com.taskapp.logic.TaskLogic#changeStatus(int, int, User)
      */
-    /*public void inputChangeInformation() {
+    public void inputChangeInformation() {
     boolean flg = true;
     while (flg) {
         try {
@@ -235,47 +229,28 @@ public class TaskUI {
             }
             int changeTaskCode = Integer.parseInt(code);  // タスクコードを整数に変換
 
-            // タスクがあるかどうか
-            Task task = taskDataAccess.findByCode(changeTaskCode);
-            if (task == null) {
-                System.out.println("存在するタスクコードを入力してください");
-                continue;
-            }
-
             // ステータスを変更する選択肢を表示
             System.out.println("どのステータスに変更するか選択してください。");
             System.out.println("1. 着手中, 2. 完了");
             System.out.print("選択肢：");
             String statusInput = reader.readLine();
+            System.out.println();
             if (!isNumeric(statusInput)) {
                 System.out.println("ステータスは半角の数字で入力してください");
                 continue;
             }
 
+            // ステータスを整数に変換
             int status = Integer.parseInt(statusInput);
+
             // ステータスが1または2であることを確認
             if (status != 1 && status != 2) {
                 System.out.println("ステータスは1・2の中から選択してください");
                 continue;
             }
 
-            // 現在のステータス確認
-            int currentStatus = task.getStatus();  // 現在のステータスを取得
-
-            // ステータス変更が可能かどうかを確認
-            if ((currentStatus == 0 && status != 1) || (currentStatus == 1 && status != 2)) {
-                System.out.println("ステータスは、前のステータスより1つ先のもののみを選択してください");
-                continue;
-            }
-
-            // ステータスの変更処理
-            task.setStatus(status);  // ステータスを変更
-            task.update(task);   // 更新を保存
-
-            // ログを記録
-            LocalDate currentDate = LocalDate.now(); // 今日の日付を取得
-            Log log = new Log(changeTaskCode, status, loginUser.getCode(), currentDate); // ログ作成
-            logDataAccess.save(log); // ログ保存
+            // changeStatusメソッドを呼び出してステータス変更
+            taskLogic.changeStatus(changeTaskCode, status, loginUser);
 
             System.out.println("ステータスの変更が完了しました。");
             flg = false;  // 処理が完了したらループを終了
@@ -283,10 +258,10 @@ public class TaskUI {
             e.printStackTrace();
         } catch (AppException e) {
             System.out.println(e.getMessage());
-        }
         System.out.println();
+        }
     }
-}*/
+}
     /**
      * ユーザーからのタスク削除情報を受け取り、タスクを削除します。
      *

@@ -46,22 +46,28 @@ public class TaskLogic {
     public void showAll(User loginUser) {
         // findAllで一覧取得
         List<Task> tasks = taskDataAccess.findAll();
-        tasks.forEach(task -> {
-            String status = "未着手";
-            if (task.getStatus() == 1) {
-                status = "着手中";
-            } else if (task.getStatus() == 2) {
-                status = "完了";
-            }
-            // 担当者
-            String repUser = "";
-            if (loginUser.getCode() == task.getRepUser().getCode()) {
-                repUser = "あなたが担当しています";
-            } else {
-                repUser = task.getRepUser().getName() + "が担当しています";
-            }
-            System.out.println("タスク名：" + task.getName() + ", 担当者名：" + repUser + ", ステータス：" + status);
-        });
+        // タスクを番号付きで表示
+    for (int i = 0; i < tasks.size(); i++) {
+        Task task = tasks.get(i);
+        String status = "未着手";
+        
+        if (task.getStatus() == 1) {
+            status = "着手中";
+        } else if (task.getStatus() == 2) {
+            status = "完了";
+        }
+        
+        // 担当者
+        String repUser = "";
+        if (loginUser.getCode() == task.getRepUser().getCode()) {
+            repUser = "あなたが担当しています";
+        } else {
+            repUser = task.getRepUser().getName() + "が担当しています";
+        }
+        
+        // 番号付きでタスク情報を表示
+        System.out.println((i + 1) + ". タスク名：" + task.getName() + ", 担当者名：" + repUser + ", ステータス：" + status);
+    }
     }
 
     /**
@@ -126,7 +132,6 @@ public class TaskLogic {
             LocalDate date = LocalDate.now();
             // ログ作成
             Log log = new Log(code, loginUser.getCode(), task.getStatus(), date);
-            // ログ保存
             logDataAccess.save(log);
             }
 

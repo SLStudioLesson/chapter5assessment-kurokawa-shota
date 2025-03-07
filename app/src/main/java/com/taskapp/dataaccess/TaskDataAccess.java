@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.taskapp.model.Log;
 import com.taskapp.model.Task;
 import com.taskapp.model.User;
 
@@ -117,41 +116,50 @@ public class TaskDataAccess {
      * @param updateTask 更新するタスク
      */
     public void update(Task updateTask) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, false))) {
-    
-            String line;
-            List<Task> tasks = new ArrayList<>(); // タスクリスト
-            boolean taskUpdated = false;  //タスクが更新されたかを確認するフラグ
-    
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",");
-                int taskCode = Integer.parseInt(data[0]);
-                String taskName = data[1];
-                int status = Integer.parseInt(data[2]);
-                int userCode = Integer.parseInt(data[3]);
-    
-                if (taskCode == updateTask.getCode()) {
-                    taskName = updateTask.getName();  
-                    status = updateTask.getStatus();  
-                    userCode = updateTask.getRepUser().getCode(); 
-                    taskUpdated = true;  
-                }
-    
-                Task taskFromFile = new Task(taskCode, taskName, status, userDataAccess.findByCode(userCode));
-                tasks.add(taskFromFile);
+        List<Task> tasks = new ArrayList<>();
+    boolean taskUpdated = false;
+
+    // まず既存のタスクを読み込み
+    try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        String line;
+        br.readLine(); // ヘッダー行をスキップ
+        while ((line = br.readLine()) != null) {
+            String[] data = line.split(",");
+            int taskCode = Integer.parseInt(data[0]);
+            String taskName = data[1];
+            int status = Integer.parseInt(data[2]);
+            int userCode = Integer.parseInt(data[3]);
+
+            if (taskCode == updateTask.getCode()) {
+                taskName = updateTask.getName();
+                status = updateTask.getStatus();
+                userCode = updateTask.getRepUser().getCode();
+                taskUpdated = true;
             }
-    
-            if (!taskUpdated) {
-                tasks.add(updateTask); 
-            }
-            for (Task t : tasks) {
-                bw.write(t.getCode() + "," + t.getName() + "," + t.getStatus() + "," + t.getRepUser().getCode());
-                bw.newLine();
-            }
-    
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            Task taskFromFile = new Task(taskCode, taskName, status, userDataAccess.findByCode(userCode));
+            tasks.add(taskFromFile);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+    // タスクが更新されていない場合は新たにリストに追加
+    if (!taskUpdated) {
+        tasks.add(updateTask);
+    }
+
+    // ファイルを上書きして新しいタスクのリストを書き込む
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, false))) {
+        // ヘッダーを書き込む
+        bw.write("コード,タスク名,ステータス,担当者コード");
+        bw.newLine();
+        for (Task t : tasks) {
+            bw.write(t.getCode() + "," + t.getName() + "," + t.getStatus() + "," + t.getRepUser().getCode());
+            bw.newLine();
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 }
 
